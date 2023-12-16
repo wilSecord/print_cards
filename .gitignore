@@ -1,4 +1,3 @@
 *.dek
-buf.jpg
+*.jpg
 __pycache__/
-test.py

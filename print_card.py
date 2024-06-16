@@ -1,7 +1,7 @@
 import sys, os, re, scrython, six, time
 from escpos import printer
 from escpos.constants import GS, ESC
-from mtgimg import make_image, collect
+from mtgimg import make_image, collect, get_rand
 import xml.etree.ElementTree as et
 
 opt = sys.argv[1]
@@ -18,9 +18,8 @@ b = []
 mb = []
 sb = []
 
-if len(sys.argv) > 4:
+if len(sys.argv) >= 4:
     full = sys.argv[4].upper() == "TRUE"
-
 match opt:
     case "d":
         deck_loc = sys.argv[2]
@@ -45,13 +44,15 @@ match opt:
         for item in sb:
             collect(item[1], "cards/sb/")
 
-        for item in os.listdir("cards/mb/"):
-            make_image("cards/mb/" + item, full)
+        for item in mb:
+            amnt = item[0]
+            cn = item[1] + '.jpg'
+            make_image("cards/mb/" + cn, full)
             for i in range(amnt):
-                e.image("cards/mb/" + item)
+                e.image("cards/mb/" + cn)
                 if not full:
                     e._raw(GS + b'V' + six.int2byte(66) + b'\x00')
-            os.remove("cards/mb/" + item)
+            os.remove("cards/mb/" + cn)
         
         for item in b:
             e.text(str(item[0]) + ' ' + item[1] + '\n')
@@ -60,23 +61,38 @@ match opt:
         
         e._raw(GS + b'V' + six.int2byte(66) + b'\x00')
         
-        for item in os.listdir("cards/sb/"):
-            make_image("cards/sb/" + item, full)
+        for item in sb:
+            amnt = item[0]
+            cn = item[1] + '.jpg'
+            make_image("cards/sb/" + cn, full)
             for i in range(amnt):
-                e.image("cards/sb/" + item)
-            os.remove("cards/sb/" + item)
+                e.image("cards/sb/" + cn)
+            os.remove("cards/sb/" + cn)
         e._raw(GS + b'V' + six.int2byte(66) + b'\x00')
 
     case "c":
         card = sys.argv[2]
         fn = card + ".jpg"
         count = int(sys.argv[3])
-        time.sleep(0.1)
+        collect(card, "")
+        make_image(fn, full)
         for i in range(count):
-            collect(card, "")
-            make_image(fn, full)
-            e.image(fn)
-            e._raw(GS + b'V' + six.int2byte(66) + b'\x00')
+            e.image(fn, full)
+            if full == False:
+                e._raw(GS + b'V' + six.int2byte(66) + b'\x00')
         os.remove(fn)
+        e._raw(GS + b'V' + six.int2byte(66) + b'\x00')
+
+    case "m":
+        cmc = sys.argv[2]
+        cn = get_rand(cmc)
+        print(cn)
+        fn = cn + ".jpg"
+        collect(cn, "")
+        make_image(fn, True)
+        e.image(fn, True)
+        os.remove(fn)
+        e._raw(GS + b'V' + six.int2byte(66) + b'\x00')
+        
     case "r":
         e._raw(GS + b'V' + six.int2byte(66) + b'\x00')

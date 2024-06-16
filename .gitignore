@@ -1,3 +1,3 @@
-*.dek
-*.jpg
+# *.dek
+# *.jpg
 __pycache__/

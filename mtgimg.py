@@ -1,5 +1,7 @@
 import scrython
+import random
 import time
+import json
 import requests
 import cv2
 import numpy as np
@@ -30,3 +32,29 @@ def collect(cn, path):
     
     with open(path + file, 'wb') as f:
         f.write(req.content)
+
+def gen_rand(cmc):
+    page = 1
+    try:
+        card_search = scrython.cards.Search(q=f"cmc:{cmc} t:creature", page=page)
+        cards = [item["name"] for item in card_search.data()]
+    except scrython.ScryfallError as e:
+        return []
+    while card_search.has_more():
+        page += 1
+        time.sleep(0.1)
+        try:
+            card_search = scrython.cards.Search(q=f"cmc:{cmc} t:creature", page=page)
+            cards += [item["name"] for item in card_search.data()]
+        except scrython.ScryfallError as e:
+            return []
+    return cards
+
+def get_rand(cmc):
+    cards = json.load(open("momir.json", "r"))
+    cn = random.choice(cards[str(cmc)])
+    return cn
+
+if __name__ == '__main__':
+    print(get_rand(2))
+

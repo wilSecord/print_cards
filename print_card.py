@@ -3,6 +3,7 @@ from escpos import printer
 from escpos.constants import GS, ESC
 from mtgimg import make_image, collect, get_rand
 import xml.etree.ElementTree as et
+import numpy as np
 
 opt = sys.argv[1]
 
@@ -30,24 +31,27 @@ match opt:
             if item.keys() and item.attrib["Sideboard"] == "false":
                 name = item.attrib["Name"]
                 amnt = int(item.attrib["Quantity"])
-                for i in range(amnt):
-                    if name not in basics:
-                        mb.append((amnt, name))
-                    elif (amnt, name) not in b:
-                        b.append((amnt, name))
+                if name not in basics:
+                    mb.append((amnt, name))
+                elif (amnt, name) not in b:
+                    b.append((amnt, name))
             elif item.keys() and sb_bool == "y":
                 sb.append((amnt, name))
         f.close()
+        print(mb)
         for item in mb:
             collect(item[1], "cards/mb/")
+            make_image("cards/mb/" + item[1] + '.jpg', full)
+            print((mb.index(item) / len(mb))*100)
 
         for item in sb:
             collect(item[1], "cards/sb/")
+            make_image("cards/sb/" + item[1] + '.jpg', full)
+            print((sb.index(item) / len(sb))*100)
 
         for item in mb:
             amnt = item[0]
             cn = item[1] + '.jpg'
-            make_image("cards/mb/" + cn, full)
             for i in range(amnt):
                 e.image("cards/mb/" + cn)
                 if not full:
@@ -64,7 +68,6 @@ match opt:
         for item in sb:
             amnt = item[0]
             cn = item[1] + '.jpg'
-            make_image("cards/sb/" + cn, full)
             for i in range(amnt):
                 e.image("cards/sb/" + cn)
             os.remove("cards/sb/" + cn)
@@ -77,7 +80,7 @@ match opt:
         collect(card, "")
         make_image(fn, full)
         for i in range(count):
-            e.image(fn, full)
+            e.image(fn)
             if full == False:
                 e._raw(GS + b'V' + six.int2byte(66) + b'\x00')
         os.remove(fn)
